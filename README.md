@@ -89,5 +89,6 @@ python tools/evaluation.py --gt-file [GT_ANNOTATION_FILE] --dt-file [PREDICT_ANN
 
 ## Acknowledgement
 This repo benefits from [hawp](https://github.com/cherubicXN/hawp), [boundary iou api](https://github.com/bowenc0221/boundary-iou-api),
-[frame-field](https://github.com/Lydorn/Polygonization-by-Frame-Field-Learning), 
+[frame-field](https://github.com/Lydorn/Polygonization-by-Frame-Field-Learning),
+[polymapper](https://github.com/lizuoyue/ETH-Thesis),
 [polyworld](https://github.com/zorzi-s/PolyWorldPretrainedNetwork). We thank the authors for their great work.
