@@ -31,6 +31,8 @@ python scripts/demo.py --dataset crowdai --img [YOUR_IMAGE_PATH]
 `--dataset crowdai` means load the model pretrained on AICrowd dataset, if you want to load the model pretrained on Inria dataset, simply change `crowdai` into `inria`.
 We also provide the pretrained models with HRNetV2-W48 as backbone on AICrowd dataset and Inria dataset. You can download the [pretrained models](https://drive.google.com/drive/folders/1IYAuM08Cmqp6OzHKWFv0y-gplNe2E8t2).
 
+You can also run our demo using Colab: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/162nuZq9ghB4pQQ9qsC9eZZK5Wn2qtUEW?usp=sharing) 
+
 ## Training & Testing
 ### Data prepare
 - Download the train.tar.gz and val.tar.gz from [AICrowd dataset](https://www.aicrowd.com/challenges/mapping-challenge-old)
