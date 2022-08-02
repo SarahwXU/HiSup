@@ -1,4 +1,7 @@
-# Accurate Polygonal Mapping of Buildings in Satellite Imagery
+# Accurate Polygonal Mapping of Buildings in Satellite Imagery [[arXiv]](https://arxiv.org/abs/2208.00609)
+### Bowen Xu*, Jiakun Xu*, Nan Xue† and Gui-Song Xia† 
+#### (* indicates equal contributions, and † indicates the corresponding authors)
+---
 ![image](figures/teaser_git.png)
 ## Highlights
 - We address the **mask reversibility** issue of polygonal mapping of buildings 
