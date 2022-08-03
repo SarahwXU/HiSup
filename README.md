@@ -19,7 +19,7 @@ conda install pytorch==1.7.0 torchvision==0.8.0 cudatoolkit=11.0 -c pytorch
 
 cd HiSup
 conda develop .
-pip install -r requirement.txt
+pip install -r requirements.txt
 
 cd hisup/csrc/lib
 make
@@ -93,7 +93,9 @@ python tools/evaluation.py --gt-file [GT_ANNOTATION_FILE] --dt-file [PREDICT_ANN
 ```
 
 ## Acknowledgement
-This repo benefits from [hawp](https://github.com/cherubicXN/hawp), [boundary iou api](https://github.com/bowenc0221/boundary-iou-api),
+This repo benefits from [hawp](https://github.com/cherubicXN/hawp), 
+[ECA-Net](https://github.com/BangguWu/ECANet),
+[boundary iou api](https://github.com/bowenc0221/boundary-iou-api),
 [frame-field](https://github.com/Lydorn/Polygonization-by-Frame-Field-Learning),
 [polymapper](https://github.com/lizuoyue/ETH-Thesis),
 [polyworld](https://github.com/zorzi-s/PolyWorldPretrainedNetwork). We thank the authors for their great work.
