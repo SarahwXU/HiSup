@@ -95,6 +95,7 @@ python tools/evaluation.py --gt-file [GT_ANNOTATION_FILE] --dt-file [PREDICT_ANN
 ## Acknowledgement
 This repo benefits from [hawp](https://github.com/cherubicXN/hawp), 
 [ECA-Net](https://github.com/BangguWu/ECANet),
+[HR-Net](https://github.com/HRNet/HRNet-Image-Classification),
 [boundary iou api](https://github.com/bowenc0221/boundary-iou-api),
 [frame-field](https://github.com/Lydorn/Polygonization-by-Frame-Field-Learning),
 [polymapper](https://github.com/lizuoyue/ETH-Thesis),
