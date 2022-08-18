@@ -38,5 +38,4 @@ MODEL:
     loss_afm : 0.1
     loss_remask : 1.0
 
-#OUTPUT_DIR: "./outputs/crowdai-small_hrnet48_att-cc"
-OUTPUT_DIR: "./outputs/crowdai_hrnet48"
+OUTPUT_DIR: "./outputs/crowdai-small_hrnet48"

@@ -163,7 +163,9 @@ class TestPipeline():
         logger = logging.getLogger("testing")
         logger.info('Testing on {} dataset'.format(dataset_name))
 
-        IM_PATH = './data/inria_test/'
+        IM_PATH = './data/inria/raw/test/images/'
+        if not os.path.exists(os.path.join(self.output_dir, 'seg')):
+            os.makedirs(os.path.join(self.output_dir, 'seg'))
         transform = build_transform(self.cfg)
         test_imgs = os.listdir(IM_PATH)
         for image_name in tqdm(test_imgs, desc='Total processing'):
@@ -251,6 +253,7 @@ class TestPipeline():
             # viz_inria(image, polygons, self.cfg.OUTPUT_DIR, file_name)
 
             # save seg results
-            im = Image.fromarray(pred_whole_img)
+            #im = Image.fromarray(pred_whole_img)
+            im = Image.fromarray(((pred_whole_img >0.5) * 255).astype(np.uint8), 'L')
             im.save(os.path.join(self.output_dir, 'seg', file_name))
             

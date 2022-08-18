@@ -32,7 +32,6 @@ You can run the following command to get quickstart.
 python scripts/demo.py --dataset crowdai --img [YOUR_IMAGE_PATH]
 ```
 `--dataset crowdai` means load the model pretrained on AICrowd dataset, if you want to load the model pretrained on Inria dataset, simply change `crowdai` into `inria`.
-We also provide the pretrained models with HRNetV2-W48 as backbone on AICrowd dataset and Inria dataset. You can download the [pretrained models](https://drive.google.com/drive/folders/1IYAuM08Cmqp6OzHKWFv0y-gplNe2E8t2).
 
 You can also run our demo using Colab: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/162nuZq9ghB4pQQ9qsC9eZZK5Wn2qtUEW?usp=sharing) 
 
@@ -81,8 +80,21 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node
 ``` 
 
 ### Testing 
+After training, a file defined by the "OUTPUT_DIR" in the config file will appear in the catalog, which contains the trained parameters.
+For the "crowdai-small_hrnet48.yaml", the trained parameters are like:
 ```
-python scripts/test.py --config-file config-files/crowdai-small.yaml
+/outputs/crowdai_hrnet48
+-- config.yml        # saved hyper-parameters setting
+-- log.txt           # saved experimental log
+-- train.log         # saved training log
+-- model_00030.pth   # parameters
+-- last_checkpoint   # directory of the parameters' file
+```
+We also provide the pretrained models with HRNetV2-W48 as backbone on AICrowd dataset and Inria dataset. 
+You can download the [pretrained models](https://drive.google.com/drive/folders/1IYAuM08Cmqp6OzHKWFv0y-gplNe2E8t2),
+and put them in the right directory according to configuration files.
+```
+python scripts/test.py --config-file config-files/crowdai_hrnet48.yaml
 ```
 ### Evaluation
 We provide implementation of different metrics for evaluation. 

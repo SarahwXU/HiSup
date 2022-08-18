@@ -24,7 +24,7 @@ DATASETS:
   ORIGIN:
     HEIGHT: 300
     WIDTH: 300
-  TRAIN: ("crowdai_train_small",)
+  TRAIN: ("crowdai_train",)
   TEST: ("crowdai_test_small",)
 
 MODEL:
