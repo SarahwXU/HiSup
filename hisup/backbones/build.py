@@ -34,7 +34,7 @@ def build_hrnet32(cfg):
     return model
 
 @MODELS.register("HRNet18v2")
-def build_hrnet32(cfg):
+def build_hrnet18(cfg):
     head_size = cfg.MODEL.HEAD_SIZE
     num_class = sum(sum(head_size, []))
 
