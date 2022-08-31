@@ -57,6 +57,18 @@ def parse_args():
     
     return args
 
+def set_random_seed(seed, deterministic=False):
+    random.seed(seed)
+    np.random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+    if deterministic:
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
 def train(cfg):
     logger = logging.getLogger("training")
     device = cfg.MODEL.DEVICE
@@ -180,12 +192,6 @@ if __name__ == "__main__":
     logger.info("Saving config into: {}".format(output_config_path))
 
     save_config(cfg, output_config_path)
-
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(args.seed)
+    set_random_seed(args.seed, True)
     train(cfg)
 
