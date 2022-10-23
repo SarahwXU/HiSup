@@ -49,8 +49,8 @@ class ECA(nn.Module):
 
     def forward(self, x1, x2):
         y = self.avg_pool(x1 + x2)
-        y = self.conv(y.squeeze(-1).transpose(-1, -2))
-        y = y.transpose(-1 ,-2).unsqueeze(-1)
+        y = self.conv(y.squeeze(-1).transpose(-1, -2).contiguous())
+        y = y.transpose(-1 ,-2).contiguous().unsqueeze(-1)
         y = self.sigmoid(y)
 
         out = self.out_conv(x2 * y.expand_as(x2))

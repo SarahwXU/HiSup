@@ -52,7 +52,7 @@ def set_random_seed(seed, deterministic=False):
         torch.backends.cudnn.benchmark = False
 
 def train(cfg):
-    logger = logging.getLogger("trainer")
+    logger = logging.getLogger("training")
     device = cfg.MODEL.DEVICE
     model = BuildingDetector(cfg)
     model = model.to(device)
@@ -221,7 +221,7 @@ if __name__ == "__main__":
             shutil.rmtree(output_dir)
         os.makedirs(output_dir, exist_ok=True)
 
-    logger = setup_logger('hawp', output_dir, out_file='train.log')
+    logger = setup_logger('training', output_dir, out_file='train.log')
     logger.info(args)
     logger.info("Loaded configuration file {}".format(args.config_file))
 
