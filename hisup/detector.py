@@ -120,8 +120,8 @@ class BuildingDetector(nn.Module):
 
         joff_pred = outputs[:, :].sigmoid() - 0.5
         mask_pred = mask_pred.softmax(1)[:,1:]
-        jloc_convex_pred = jloc_pred.softmax(1)[:, 1:2]
-        jloc_concave_pred = jloc_pred.softmax(1)[:, 2:3]
+        jloc_convex_pred = jloc_pred.softmax(1)[:, 2:3]
+        jloc_concave_pred = jloc_pred.softmax(1)[:, 1:2]
         remask_pred = remask_pred.softmax(1)[:, 1:]
 
         t1 = time.time()
