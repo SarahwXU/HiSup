@@ -1,3 +1,4 @@
+import re
 import cv2
 import torch
 import torch.nn.functional as F
@@ -5,10 +6,11 @@ import torch.nn.functional as F
 from math import log
 from torch import nn
 from hisup.backbones import build_backbone
-from hisup.utils.polygon import generate_polygon
-from hisup.utils.polygon import get_pred_junctions
+from hisup.utils.polygon import generate_polygon, get_pred_junctions
+from hisup.utils.polygon import get_poly_crowdai_new
 from skimage.measure import label, regionprops
-
+import time
+import numpy as np
 
 def cross_entropy_loss_for_junction(logits, positive):
     nlogp = -F.log_softmax(logits, dim=1)
@@ -56,7 +58,6 @@ class ECA(nn.Module):
         out = self.out_conv(x2 * y.expand_as(x2))
         return out
 
-
 class BuildingDetector(nn.Module):
     def __init__(self, cfg, test=False):
         super(BuildingDetector, self).__init__()
@@ -82,14 +83,16 @@ class BuildingDetector(nn.Module):
         self.a2j_att = ECA(dim_in)
 
         self.mask_predictor = self._make_predictor(dim_in, 2)
-        self.jloc_predictor = self._make_predictor(dim_in, 3)
+        self.jloc_predictor = self._make_predictor(dim_in, 3) 
         self.afm_predictor = self._make_predictor(dim_in, 2)
 
         self.refuse_conv = self._make_conv(2, dim_in//2, dim_in)
         self.final_conv = self._make_conv(dim_in*2, dim_in, 2)
 
         self.train_step = 0
-        
+        self.network_time = []
+        self.postprocess_time = []
+
     def forward(self, images, annotations = None):
         if self.training:
             return self.forward_train(images, annotations=annotations)
@@ -98,6 +101,7 @@ class BuildingDetector(nn.Module):
 
     def forward_test(self, images, annotations = None):
         device = images.device
+        t0 = time.time()
         outputs, features = self.backbone(images)
 
         mask_feature = self.mask_head(features)
@@ -119,6 +123,9 @@ class BuildingDetector(nn.Module):
         jloc_convex_pred = jloc_pred.softmax(1)[:, 1:2]
         jloc_concave_pred = jloc_pred.softmax(1)[:, 2:3]
         remask_pred = remask_pred.softmax(1)[:, 1:]
+
+        t1 = time.time()
+        self.network_time.append(t1 - t0)
         
         scale_y = self.origin_height / self.pred_height
         scale_x = self.origin_width / self.pred_width
@@ -129,20 +136,18 @@ class BuildingDetector(nn.Module):
         batch_juncs = []
 
         for b in range(remask_pred.size(0)):
-            mask_pred_per_im = cv2.resize(remask_pred[b][0].cpu().numpy(), (self.origin_width, self.origin_height))
+            mask_pred_per_im = cv2.resize(remask_pred[b][0].cpu().numpy().astype(np.float32), (self.origin_width, self.origin_height))
             juncs_pred = get_pred_junctions(jloc_concave_pred[b], jloc_convex_pred[b], joff_pred[b])
             juncs_pred[:,0] *= scale_x
             juncs_pred[:,1] *= scale_y
 
             if not self.test_inria:
                 polys, scores = [], []
-                props = regionprops(label(mask_pred_per_im > 0.5))
-                for prop in props:
-                    poly, juncs_sa, edges_sa, score, juncs_index = generate_polygon(prop, mask_pred_per_im, \
-                                                                            juncs_pred, 0, self.test_inria)
-                    if juncs_sa.shape[0] == 0:
+                props = regionprops(label(mask_pred_per_im > 0.5))                
+                for prop in props:                    
+                    poly, score, _ = get_poly_crowdai_new(prop.coords, mask_pred_per_im, juncs_pred)
+                    if len(poly) == 0:
                         continue
-
                     polys.append(poly)
                     scores.append(score)
                 batch_scores.append(scores)
@@ -151,6 +156,7 @@ class BuildingDetector(nn.Module):
             batch_masks.append(mask_pred_per_im)
             batch_juncs.append(juncs_pred)
 
+        self.postprocess_time.append(time.time() - t1)
         extra_info = {}
         output = {
             'polys_pred': batch_polygons,

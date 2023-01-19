@@ -5,6 +5,7 @@ import torch.nn.functional as F
 
 from scipy.spatial.distance import cdist
 
+
 def non_maximum_suppression(a):
     ap = F.max_pool2d(a, 3, stride=1, padding=1)
     mask = (a == ap).float().clamp(min=0.0)
@@ -21,7 +22,8 @@ def get_junctions(jloc, joff, topk = 300, th=0):
 
     junctions = torch.stack((x, y)).t()
 
-    return junctions[scores>th], scores[scores>th]
+    # return junctions[scores>th], scores[scores>th]
+    return junctions, scores
 
 def get_pred_junctions(convex_map, concave_map, joff_map):
     # concave junctions
@@ -65,7 +67,8 @@ def ext_c_to_poly_coco(ext_c, im_h, im_w):
     contours, _ = cv2.findContours(trans_prop_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     contour = contours[0].squeeze(1)
     poly = np.concatenate((contour, contour[0].reshape(-1, 2)))
-    new_poly = diagonal_to_square(poly)
+    # new_poly = diagonal_to_square(poly)
+    new_poly = poly
     return new_poly
 
 def diagonal_to_square(poly):
@@ -104,9 +107,9 @@ def inn_c_to_poly_coco(inn_c, im_h, im_w):
     contours, _ = cv2.findContours(trans_prop_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     contour = contours[0].squeeze(1)[::-1]
     poly = np.concatenate((contour, contour[0].reshape(-1, 2)))
-    #return poly
-    new_poly = diagonal_to_square(poly)
-    return new_poly
+    return poly
+    # new_poly = diagonal_to_square(poly)
+    # return new_poly
 
 def simple_polygon(poly, thres=10):
     if (poly[0] == poly[-1]).all():
@@ -126,7 +129,8 @@ def simple_polygon(poly, thres=10):
 
 def generate_polygon(prop, mask, juncs, pid, test_inria):
     if not test_inria:
-        poly, score, juncs_pred_index = get_poly_crowdai(prop, mask, juncs)
+        # poly, score, juncs_pred_index = get_poly_crowdai(prop, mask, juncs)
+        poly, score, juncs_pred_index = get_poly_crowdai_new(prop, mask, juncs)
         juncs_sa, edges_sa, junc_index = get_junc_edge_id(poly, juncs_pred_index)
         return poly, juncs_sa, edges_sa, score, juncs_pred_index
     else:
@@ -134,30 +138,75 @@ def generate_polygon(prop, mask, juncs, pid, test_inria):
         edges_sa = get_edge_id_inria(poly, juncs_pred_index) - pid
         return poly, poly, edges_sa, score, juncs_pred_index
 
-
 def get_poly_crowdai(prop, mask_pred, junctions):
     prop_mask = np.zeros_like(mask_pred).astype(np.uint8)
     prop_mask[prop.coords[:, 0], prop.coords[:, 1]] = 1
     masked_instance = np.ma.masked_array(mask_pred, mask=(prop_mask != 1))
     score = masked_instance.mean()
     im_h, im_w = mask_pred.shape
-    contours, hierarchy = cv2.findContours(prop_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    contours, hierarchy = cv2.findContours(prop_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE) #cv2.CHAIN_APPROX_SIMPLE
+    
+    im_h, im_w = mask_pred.shape
+    refine_mask = np.zeros([im_h+1, im_w+1], dtype=np.uint8)
+    fy, fx = np.where(prop_mask==1)
+    refine_mask[fy, fx] = 1
+    refine_mask[fy+1, fx] = 1
+    refine_mask[fy, fx+1] = 1
+    refine_mask[fy+1, fx+1] = 1
+    contours_, hierarchy_ = cv2.findContours(refine_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    
     poly = []
     edge_index = []
     jid = 0
-    for contour, h in zip(contours, hierarchy[0]):
+    for contour, h, c1 in zip(contours, hierarchy[0], contours_):
         c = []
         if h[3] == -1:
             c = ext_c_to_poly_coco(contour, im_h, im_w)
-        if h[3] != -1:
+        else:
             if cv2.contourArea(contour) >= 50:
                 c = inn_c_to_poly_coco(contour, im_h, im_w)
-            #c = inn_c_to_poly_coco(contour, im_h, im_w)
         if len(c) > 3:
             init_poly = c.copy()
             if len(junctions) > 0:
-                cj_match_ = np.argmin(cdist(c, junctions), axis=1)
-                cj_dis = cdist(c, junctions)[np.arange(len(cj_match_)), cj_match_]
+                dist = cdist(c, junctions)
+                cj_match_, cj_dis = dist.argmin(1), dist.min(1)  
+                u, ind = np.unique(cj_match_[cj_dis < 5], return_index=True)
+                if len(u) > 2:
+                    ppoly = junctions[u[np.argsort(ind)]]
+                    ppoly = np.concatenate((ppoly, ppoly[0].reshape(-1, 2)))
+                    init_poly = ppoly
+            init_poly = simple_polygon(init_poly, thres=10)
+            poly.extend(init_poly.tolist())
+            edge_index.append([i for i in range(jid, jid+len(init_poly)-1)])
+            jid += len(init_poly)
+    return np.array(poly), score, edge_index
+
+def get_poly_crowdai_new(prop, mask_pred, junctions):
+    prop_mask = np.zeros_like(mask_pred).astype(np.uint8)
+    prop_mask[prop[:, 0], prop[:, 1]] = 1
+    masked_instance = np.ma.masked_array(mask_pred, mask=(prop_mask != 1))
+    score = masked_instance.mean()
+
+    # remove the gap of masks between cv2 and coco
+    im_h, im_w = mask_pred.shape
+    fy, fx = np.where(prop_mask==1)
+    refine_mask = np.zeros([im_h+1, im_w+1], dtype=np.uint8)
+    refine_mask[fy, fx] = 1
+    refine_mask[fy+1, fx] = 1
+    refine_mask[fy, fx+1] = 1
+    refine_mask[fy+1, fx+1] = 1
+
+    contours, hierarchy = cv2.findContours(refine_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    poly, edge_index, jid = [], [], 0
+    for contour, h in zip(contours, hierarchy[0]):
+        if h[3] != -1 and cv2.contourArea(contour) < 50:
+            continue
+        c = contour.squeeze(1)
+        if len(c) > 3:
+            init_poly = c.copy()
+            if len(junctions) > 0:
+                dist = cdist(c, junctions)
+                cj_match_, cj_dis = dist.argmin(1), dist.min(1)  
                 u, ind = np.unique(cj_match_[cj_dis < 5], return_index=True)
                 if len(u) > 2:
                     ppoly = junctions[u[np.argsort(ind)]]
@@ -185,7 +234,7 @@ def get_poly_inria(prop, mask_pred, junctions, pid):
             if len(junctions) > 0:
                 cj_match_ = np.argmin(cdist(contour, junctions), axis=1)
                 cj_dis = cdist(contour, junctions)[np.arange(len(cj_match_)), cj_match_]
-                u, ind = np.unique(cj_match_[cj_dis < 5], return_index=True)
+                u, ind = np.unique(cj_match_[cj_dis < 20], return_index=True)
                 if len(u) > 2:
                     ppoly = junctions[u[np.argsort(ind)]]
                     #ppoly = np.concatenate((ppoly, ppoly[0].reshape(-1, 2)))
