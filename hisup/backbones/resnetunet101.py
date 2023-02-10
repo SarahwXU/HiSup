@@ -1,3 +1,9 @@
+# ------------------------------------------------------------------------------
+# Copyright (c) 2022, Nicolas Girard.
+# Licensed under the BSD 3-Clause License.
+# Written by Nicolas Girard (nicolas.jp.girard@gmail.com)
+# ------------------------------------------------------------------------------
+
 from collections import OrderedDict
 from torch import nn
 from torch.nn import functional as F

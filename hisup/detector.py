@@ -29,6 +29,8 @@ def sigmoid_l1_loss(logits, targets, offset = 0.0, mask=None):
 
     return loss.mean()
 
+# Copyright (c) 2019 BangguWu, Qilong Wang
+# Modified by Bowen Xu, Jiakun Xu, Nan Xue and Gui-song Xia
 class ECA(nn.Module):
     def __init__(self, channel, gamma=2, b=1):
         super(ECA, self).__init__()
