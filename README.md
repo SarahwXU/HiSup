@@ -1,6 +1,9 @@
 # Accurate Polygonal Mapping of Buildings in Satellite Imagery [[arXiv]](https://arxiv.org/abs/2208.00609)
+### *ISPRS Journal of Photogrammetry and Remote Sensing*
 ### Bowen Xu*, Jiakun Xu*, Nan Xue† and Gui-Song Xia† 
 #### (* indicates equal contributions, and † indicates the corresponding authors)
+
+- **NEWS: Our paper has been accepted to *ISPRS Journal of Photogrammetry and Remote Sensing.***
 ---
 ![image](figures/teaser_git.png)
 ## Highlights
