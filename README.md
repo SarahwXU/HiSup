@@ -1,9 +1,7 @@
-# Accurate Polygonal Mapping of Buildings in Satellite Imagery [[arXiv]](https://arxiv.org/abs/2208.00609)
-### *ISPRS Journal of Photogrammetry and Remote Sensing*, 2023
+# HiSup: Accurate polygonal mapping of buildings in satellite imagery with hierarchical supervision
 ### Bowen Xu*, Jiakun Xu*, Nan Xue† and Gui-Song Xia† 
 #### (* indicates equal contributions, and † indicates the corresponding authors)
 
-- **NEWS: Our paper has been accepted to *ISPRS Journal of Photogrammetry and Remote Sensing.***
 ---
 ![image](figures/teaser_git.png)
 ## Highlights
@@ -105,6 +103,21 @@ You can run the following command to evaluate the test results in MS-COCO format
 The [prediction](https://drive.google.com/drive/folders/1VgOqnWfCJxic1riOtq7tT96-8w58ss7g) in json format corresponding to the validation set of AICrowd dataset is provided.
 ```
 python tools/evaluation.py --gt-file [GT_ANNOTATION_FILE] --dt-file [PREDICT_ANNOTATION_FILE] --eval-type boundary_iou
+```
+
+## Citation
+If you find our work useful in your research, please consider citing:
+```
+@article{XU2023284,
+    author = {Bowen Xu and Jiakun Xu and Nan Xue and Gui-Song Xia},
+    title = {HiSup: Accurate polygonal mapping of buildings in satellite imagery with hierarchical supervision},
+    journal = {ISPRS Journal of Photogrammetry and Remote Sensing},
+    volume = {198},
+    pages = {284-296},
+    year = {2023},
+    issn = {0924-2716},
+    doi = {https://doi.org/10.1016/j.isprsjprs.2023.03.006},
+}
 ```
 
 ## Acknowledgement
