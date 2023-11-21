@@ -26,6 +26,11 @@ cd hisup/csrc/lib
 make
 ```
 For evaluation with boundary IoU, please install boundary IoU API following [the installation instruction](https://github.com/bowenc0221/boundary-iou-api).
+```
+git clone git@github.com:bowenc0221/boundary-iou-api.git
+cd boundary_iou_api
+pip install -e .
+```
 
 ## Quickstart with the pretrained model
 You can run the following command to get quickstart.
