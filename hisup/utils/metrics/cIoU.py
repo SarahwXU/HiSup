@@ -1,11 +1,13 @@
 """
-This is the code from https://github.com/zorzi-s/PolyWorldPretrainedNetwork.
+The code for C-IoU, adopted from https://github.com/zorzi-s/PolyWorldPretrainedNetwork/blob/main/coco_IoU_cIoU.py.
 @article{zorzi2021polyworld,
   title={PolyWorld: Polygonal Building Extraction with Graph Neural Networks in Satellite Images},
   author={Zorzi, Stefano and Bazrafkan, Shabab and Habenschuss, Stefan and Fraundorfer, Friedrich},
   journal={arXiv preprint arXiv:2111.15491},
   year={2021}
 }
+DATE: 2024-10-11
+Description: The code is modified to handle cases where images have no annotation labels.
 """
 
 from pycocotools.coco import COCO
@@ -31,57 +33,58 @@ def calc_IoU(a, b):
 
 def compute_IoU_cIoU(input_json, gti_annotations):
     # Ground truth annotations
-    coco_gti = COCO(gti_annotations)
+    coco_gt = COCO(gti_annotations)
 
-    # Predictions annotations
+    # load predicted annotations
     submission_file = json.loads(open(input_json).read())
-    coco = COCO(gti_annotations)
-    coco = coco.loadRes(submission_file)
+    coco_dt = coco_gt.loadRes(submission_file)
 
 
-    image_ids = coco.getImgIds(catIds=coco.getCatIds())
+    image_ids = coco_gt.getImgIds(catIds=coco_gt.getCatIds())
     bar = tqdm(image_ids)
 
     list_iou = []
     list_ciou = []
     pss = []
     for image_id in bar:
+        # retrieve an image
+        img = coco_gt.loadImgs(image_id)[0]
 
-        img = coco.loadImgs(image_id)[0]
-
-        annotation_ids = coco.getAnnIds(imgIds=img['id'])
-        annotations = coco.loadAnns(annotation_ids)
-        N = 0
-        for _idx, annotation in enumerate(annotations):
-            try:
-                rle = cocomask.frPyObjects(annotation['segmentation'], img['height'], img['width'])
-            except Exception:
-                import ipdb; ipdb.set_trace()
-            m = cocomask.decode(rle)
-            if _idx == 0:
-                mask = m.reshape((img['height'], img['width']))
-                N = len(annotation['segmentation'][0]) // 2
-            else:
-                mask = mask + m.reshape((img['height'], img['width']))
-                N = N + len(annotation['segmentation'][0]) // 2
-
-        mask = mask != 0
-
-
-        annotation_ids = coco_gti.getAnnIds(imgIds=img['id'])
-        annotations = coco_gti.loadAnns(annotation_ids)
+        # get GT mask and number of vertices
+        annotation_ids = coco_gt.getAnnIds(imgIds=img['id'])
         N_GT = 0
-        for _idx, annotation in enumerate(annotations):
-            rle = cocomask.frPyObjects(annotation['segmentation'], img['height'], img['width'])
-            m = cocomask.decode(rle)
-            if _idx == 0:
-                mask_gti = m.reshape((img['height'], img['width']))
-                N_GT = len(annotation['segmentation'][0]) // 2
-            else:
-                mask_gti = mask_gti + m.reshape((img['height'], img['width']))
-                N_GT = N_GT + len(annotation['segmentation'][0]) // 2
+        if len(annotation_ids) > 0:
+            annotations = coco_gt.loadAnns(annotation_ids)
+            for _idx, annotation in enumerate(annotations):
+                rle = cocomask.frPyObjects(annotation['segmentation'], img['height'], img['width'])
+                m = cocomask.decode(rle)
+                if _idx == 0:
+                    mask_gt = m.reshape((img['height'], img['width']))
+                    N_GT = len(annotation['segmentation'][0]) // 2
+                else:
+                    mask_gt = mask_gt + m.reshape((img['height'], img['width']))
+                    N_GT = N_GT + len(annotation['segmentation'][0]) // 2
+        else:
+            mask_gt = np.zeros((img['height'], img['weight']), dtype=np.uint8)
+        mask_gt = mask_gt != 0
 
-        mask_gti = mask_gti != 0
+        # get Predicted mask and number of vertices
+        annotation_ids = coco_dt.getAnnIds(imgIds=img['id'])
+        N = 0
+        if len(annotation_ids) > 0:
+            annotations = coco_dt.loadAnns(annotation_ids)
+            for _idx, annotation in enumerate(annotations):
+                rle = cocomask.frPyObjects(annotation['segmentation'], img['height'], img['width'])
+                m = cocomask.decode(rle)
+                if _idx == 0:
+                    mask = m.reshape((img['height'], img['width']))
+                    N = len(annotation['segmentation'][0]) // 2
+                else:
+                    mask = mask + m.reshape((img['height'], img['width']))
+                    N = N + len(annotation['segmentation'][0]) // 2
+        else:
+            mask = np.zeros((img['height'], img['width']), dtype=np.uint8)
+        mask = mask != 0
 
         ps = 1 - np.abs(N - N_GT) / (N + N_GT + 1e-9)
         iou = calc_IoU(mask, mask_gti)
